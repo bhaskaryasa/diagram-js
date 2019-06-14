@@ -13,6 +13,8 @@ import autoResizeModule from 'lib/features/auto-resize';
 import rulesModule from './rules';
 import autoResizeProviderModule from './auto-resize';
 
+import { getSteps } from 'lib/features/modeling/cmd/SpaceToolHandler';
+
 import { isMac } from 'lib/util/Platform';
 
 var keyModifier = isMac() ? { metaKey: true } : { ctrlKey: true };
@@ -633,6 +635,135 @@ describe('features/space-tool', function() {
       expect(parentShape).to.have.bounds({ x: 200, y: 150, width: 200, height: 200 });
       expect(childShape).to.have.bounds({ x: 225, y: 175, width: 50, height: 50 });
     }));
+
+  });
+
+
+  describe('steps', function() {
+
+    beforeEach(bootstrapDiagram());
+
+    var level1shape1,
+        level1shape2,
+        level1shape2label,
+        level2shape1,
+        level3shape1,
+        level3shape1label,
+        level3shape2,
+        level3connection,
+        level3connectionLabel;
+
+    beforeEach(inject(function(elementFactory, canvas) {
+
+      level1shape1 = elementFactory.createShape({
+        id: 'level1shape1',
+        x: 100, y: 100,
+        width: 450, height: 200
+      });
+
+      canvas.addShape(level1shape1);
+
+      level1shape2 = elementFactory.createShape({
+        id: 'level1shape2',
+        x: 400, y: 350,
+        width: 100, height: 50
+      });
+
+      canvas.addShape(level1shape2);
+
+      level1shape2label = elementFactory.createLabel({
+        id: 'level1shape2label',
+        x: 425, y: 425,
+        width: 50, height: 20,
+        labelTarget: level1shape2
+      });
+
+      canvas.addShape(level1shape2label);
+
+      level2shape1 = elementFactory.createShape({
+        id: 'level2shape1',
+        x: 125, y: 125,
+        width: 400, height: 150
+      });
+
+      canvas.addShape(level2shape1, level1shape1);
+
+      level3shape1 = elementFactory.createShape({
+        id: 'level3shape1',
+        x: 150, y: 150,
+        width: 100, height: 50
+      });
+
+      canvas.addShape(level3shape1, level2shape1);
+
+      level3shape1label = elementFactory.createLabel({
+        id: 'level3shape1label',
+        x: 175, y: 225,
+        width: 50, height: 20,
+        labelTarget: level3shape1
+      });
+
+      canvas.addShape(level3shape1label, level2shape1);
+
+      level3shape2 = elementFactory.createShape({
+        id: 'level3shape2',
+        x: 400, y: 150,
+        width: 100, height: 50
+      });
+
+      canvas.addShape(level3shape2, level2shape1);
+
+      level3connection = elementFactory.createConnection({
+        id: 'level3connection',
+        source: level3shape1,
+        target: level3shape2,
+        waypoints: [
+          { x: 250, y: 175 },
+          { x: 400, y: 175 }
+        ]
+      });
+
+      canvas.addConnection(level3connection, level2shape1);
+
+      level3connectionLabel = elementFactory.createLabel({
+        id: 'level3connectionLabel',
+        x: 300, y: 200,
+        width: 50, height: 20,
+        labelTarget: level3shape1
+      });
+
+      canvas.addShape(level3connectionLabel, level2shape1);
+    }));
+
+
+    it('should return steps', function() {
+
+      // given
+      var movingShapes = [
+        level1shape2,
+        level1shape2label,
+        level3shape2,
+        level3connectionLabel
+      ];
+
+      var resizingShapes = [
+        level1shape1,
+        level2shape1
+      ];
+
+      // when
+      var steps = getSteps(movingShapes, resizingShapes);
+
+      // then
+      expect(steps).to.have.length(4);
+
+      expect(steps).to.eql([
+        { type: 'move', shapes: [ level1shape2, level1shape2label ] },
+        { type: 'resize', shapes: [ level1shape1 ] },
+        { type: 'resize', shapes: [ level2shape1 ] },
+        { type: 'move', shapes: [ level3shape2, level3connectionLabel ] }
+      ]);
+    });
 
   });
 
