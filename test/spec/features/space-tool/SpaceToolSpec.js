@@ -641,17 +641,29 @@ describe('features/space-tool', function() {
 
   describe('steps', function() {
 
-    beforeEach(bootstrapDiagram());
+    beforeEach(bootstrapDiagram({
+      modules: [
+        modelingModule,
+        rulesModule,
+        spaceToolModule
+      ]
+    }));
+
+    beforeEach(inject(function(dragging) {
+      dragging.setOptions({ manual: true });
+    }));
 
     var level1shape1,
         level1shape2,
-        level1shape2label,
         level2shape1,
+        level2shape2,
+        level2shape2label,
         level3shape1,
         level3shape1label,
         level3shape2,
-        level3connection,
-        level3connectionLabel;
+        level3connection1,
+        level3connection1Label,
+        level3connection2;
 
     beforeEach(inject(function(elementFactory, canvas) {
 
@@ -665,20 +677,28 @@ describe('features/space-tool', function() {
 
       level1shape2 = elementFactory.createShape({
         id: 'level1shape2',
-        x: 400, y: 350,
-        width: 100, height: 50
+        x: 375, y: 325,
+        width: 150, height: 150
       });
 
       canvas.addShape(level1shape2);
 
-      level1shape2label = elementFactory.createLabel({
-        id: 'level1shape2label',
+      level2shape2 = elementFactory.createShape({
+        id: 'level2shape2',
+        x: 400, y: 350,
+        width: 100, height: 50
+      });
+
+      canvas.addShape(level2shape2, level1shape2);
+
+      level2shape2label = elementFactory.createLabel({
+        id: 'level2shape2label',
         x: 425, y: 425,
         width: 50, height: 20,
         labelTarget: level1shape2
       });
 
-      canvas.addShape(level1shape2label);
+      canvas.addShape(level2shape2label, level1shape2);
 
       level2shape1 = elementFactory.createShape({
         id: 'level2shape1',
@@ -713,8 +733,8 @@ describe('features/space-tool', function() {
 
       canvas.addShape(level3shape2, level2shape1);
 
-      level3connection = elementFactory.createConnection({
-        id: 'level3connection',
+      level3connection1 = elementFactory.createConnection({
+        id: 'level3connection1',
         source: level3shape1,
         target: level3shape2,
         waypoints: [
@@ -723,16 +743,64 @@ describe('features/space-tool', function() {
         ]
       });
 
-      canvas.addConnection(level3connection, level2shape1);
+      canvas.addConnection(level3connection1, level2shape1);
 
-      level3connectionLabel = elementFactory.createLabel({
-        id: 'level3connectionLabel',
+      level3connection1Label = elementFactory.createLabel({
+        id: 'level3connection1Label',
         x: 300, y: 200,
         width: 50, height: 20,
         labelTarget: level3shape1
       });
 
-      canvas.addShape(level3connectionLabel, level2shape1);
+      canvas.addShape(level3connection1Label, level2shape1);
+
+      level3connection2 = elementFactory.createConnection({
+        id: 'level3connection2',
+        source: level3shape2,
+        target: level2shape2,
+        waypoints: [
+          { x: 450, y: 200 },
+          { x: 450, y: 350 }
+        ]
+      });
+
+      canvas.addConnection(level3connection2);
+    }));
+
+    it.only('should move and resize elements in correct order', inject(function(dragging, spaceTool) {
+
+      // given
+      var movingShapes = [
+        level1shape2,
+        level2shape2,
+        level2shape2label,
+        level3shape2,
+        level3connection1Label
+      ];
+
+      var resizingShapes = [
+        level1shape1,
+        level2shape1
+      ];
+
+      // when
+      var steps = getSteps(movingShapes, resizingShapes);
+
+      spaceTool.activateMakeSpace(canvasEvent({ x: 275, y: 0 }));
+
+      dragging.move(canvasEvent({ x: 375, y: 0 }));
+
+      dragging.end();
+
+      // then
+      expect(steps).to.have.length(4);
+
+      expect(steps).to.eql([
+        { type: 'move', shapes: [ level1shape2, level2shape2, level2shape2label ] },
+        { type: 'resize', shapes: [ level1shape1 ] },
+        { type: 'resize', shapes: [ level2shape1 ] },
+        { type: 'move', shapes: [ level3shape2, level3connection1Label ] }
+      ]);
     }));
 
 
@@ -741,9 +809,10 @@ describe('features/space-tool', function() {
       // given
       var movingShapes = [
         level1shape2,
-        level1shape2label,
+        level2shape2,
+        level2shape2label,
         level3shape2,
-        level3connectionLabel
+        level3connection1Label
       ];
 
       var resizingShapes = [
@@ -761,7 +830,7 @@ describe('features/space-tool', function() {
         { type: 'move', shapes: [ level1shape2, level1shape2label ] },
         { type: 'resize', shapes: [ level1shape1 ] },
         { type: 'resize', shapes: [ level2shape1 ] },
-        { type: 'move', shapes: [ level3shape2, level3connectionLabel ] }
+        { type: 'move', shapes: [ level3shape2, level3connection1Label ] }
       ]);
     });
 
