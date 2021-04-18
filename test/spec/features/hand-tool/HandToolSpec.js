@@ -1,5 +1,6 @@
 import {
   bootstrapDiagram,
+  getDiagramJS,
   inject
 } from 'test/TestHelper';
 
@@ -10,6 +11,14 @@ import draggingModule from 'lib/features/dragging';
 import keyboardModule from 'lib/features/keyboard';
 
 import { createKeyEvent } from 'test/util/KeyEvents';
+
+import {
+  assign
+} from 'min-dash';
+
+import { isMac } from 'lib/util/Platform';
+
+var keyModifier = isMac() ? { metaKey: true } : { ctrlKey: true };
 
 
 describe('features/hand-tool', function() {
@@ -43,7 +52,28 @@ describe('features/hand-tool', function() {
     canvas.addShape(childShape, rootShape);
   }));
 
-  describe('general', function() {
+
+  describe('#toggle', function() {
+
+    it('should activate and deactivate', inject(function(handTool) {
+
+      // given
+      handTool.toggle();
+
+      // assume
+      expect(handTool.isActive()).to.be.true;
+
+      // when
+      handTool.toggle();
+
+      // then
+      expect(handTool.isActive()).not.to.be.ok;
+    }));
+
+  });
+
+
+  describe('behavior', function() {
 
     it('should not move element', inject(function(handTool, dragging) {
 
@@ -68,51 +98,62 @@ describe('features/hand-tool', function() {
   });
 
 
-  describe('activate on space', function() {
+  describe('activate on mouse', function() {
 
-    var removeEventListenerSpy;
-
-    beforeEach(inject(function(eventBus) {
-      eventBus.fire('keyboard.keydown', {
-        keyEvent: createKeyEvent(' ')
-      });
-
-      removeEventListenerSpy = sinon.spy(window, 'removeEventListener');
-    }));
-
-    afterEach(function() {
-      removeEventListenerSpy.restore();
-    });
-
-
-    it('should activate on space key down', inject(function(handTool) {
+    it('should start on PRIMARY mousedown', inject(function(handTool, eventBus) {
 
       // when
-      triggerMouseEvent('mousemove', window);
+      eventBus.fire(mouseDownEvent(rootShape, keyModifier));
 
       // then
       expect(handTool.isActive()).to.be.true;
     }));
 
 
-    it('should deactivate on space key up (mousemove)', inject(function(eventBus, handTool) {
-
-      // given
-      triggerMouseEvent('mousemove', window);
+    it('should NOT start on AUXILIARY mousedown', inject(function(handTool, eventBus) {
 
       // when
-      eventBus.fire('keyboard.keyup', {
+      eventBus.fire(mouseDownEvent(rootShape, { button: 1, ctrlKey: false }));
+
+      // then
+      expect(handTool.isActive()).to.be.false;
+    }));
+
+  });
+
+
+  describe('activate on space', function() {
+
+    it('should activate on space key down', inject(function(eventBus, handTool) {
+
+      // when
+      eventBus.fire('keyboard.keydown', {
         keyEvent: createKeyEvent(' ')
       });
 
       // then
-      expect(handTool.isActive()).to.be.false;
-
-      expect(removeEventListenerSpy).to.have.been.called;
+      expect(handTool.isActive()).to.be.true;
     }));
 
 
-    it('should deactivate on space key up (NO mousemove)', inject(function(eventBus, handTool) {
+    it('should ignore non space down', inject(function(eventBus, handTool) {
+
+      // when
+      eventBus.fire('keyboard.keydown', {
+        keyEvent: createKeyEvent('A')
+      });
+
+      // then
+      expect(handTool.isActive()).not.to.be.ok;
+    }));
+
+
+    it('should deactivate on space key up (mousemove)', inject(function(eventBus, handTool) {
+
+      // given
+      eventBus.fire('keyboard.keydown', {
+        keyEvent: createKeyEvent(' ')
+      });
 
       // when
       eventBus.fire('keyboard.keyup', {
@@ -120,21 +161,40 @@ describe('features/hand-tool', function() {
       });
 
       // then
-      expect(handTool.isActive()).to.be.false;
+      expect(handTool.isActive()).not.to.be.ok;
+    }));
 
-      expect(removeEventListenerSpy).to.have.been.called;
+
+    it('should ignore non space up', inject(function(eventBus, handTool) {
+
+      // given
+      eventBus.fire('keyboard.keydown', {
+        keyEvent: createKeyEvent(' ')
+      });
+
+      // when
+      eventBus.fire('keyboard.keyup', {
+        keyEvent: createKeyEvent('A')
+      });
+
+      // then
+      expect(handTool.isActive()).to.be.true;
     }));
 
   });
 
 });
 
-// helpers //////////
 
-function triggerMouseEvent(type, node) {
-  var event = document.createEvent('MouseEvent');
+// helpers ////////////////
 
-  event.initMouseEvent(type, true, true, window, 0, 0, 0, 100, 100, false, false, false, false, 0, null);
+function mouseDownEvent(element, data) {
 
-  return node.dispatchEvent(event);
+  return getDiagramJS().invoke(function(eventBus) {
+    return eventBus.createEvent({
+      type: 'element.mousedown',
+      element: element,
+      originalEvent: assign({ button: 0 }, data || {})
+    });
+  });
 }

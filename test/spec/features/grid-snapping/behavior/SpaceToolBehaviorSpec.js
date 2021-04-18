@@ -12,6 +12,8 @@ import {
   createCanvasEvent as canvasEvent
 } from '../../../../util/MockEvents';
 
+var spy = sinon.spy;
+
 
 describe('features/grid-snapping - space tool', function() {
 
@@ -38,18 +40,93 @@ describe('features/grid-snapping - space tool', function() {
   }));
 
 
-  it('should snap make space', inject(function(spaceTool, dragging) {
+  describe('should snap make space', function() {
 
-    // when
-    spaceTool.activateMakeSpace(canvasEvent({ x: 90, y: 100 }));
+    it('horizontal', inject(function(dragging, spaceTool) {
 
-    dragging.move(canvasEvent({ x: 110, y: 100 }));
+      // when
+      spaceTool.activateMakeSpace(canvasEvent({ x: 0, y: 0 }));
 
-    dragging.end();
+      // initialize context
+      dragging.move(canvasEvent({ x: 100, y: 0 }));
 
-    // then
-    expect(shape.x).to.eql(120);
-    expect(shape.y).to.eql(100);
-  }));
+      dragging.move(canvasEvent({ x: 97, y: 0 }));
+
+      dragging.end();
+
+      // then
+      expect(shape.x).to.eql(200);
+    }));
+
+
+    it('vertical', inject(function(dragging, spaceTool) {
+
+      // when
+      spaceTool.activateMakeSpace(canvasEvent({ x: 0, y: 0 }));
+
+      // initialize context
+      dragging.move(canvasEvent({ x: 0, y: 100 }));
+
+      dragging.move(canvasEvent({ x: 0, y: 103 }));
+
+      dragging.end();
+
+      // then
+      expect(shape.y).to.eql(200);
+    }));
+
+  });
+
+
+  describe('should snap x/y and dx/dy', function() {
+
+    it('horizontal', inject(function(dragging, eventBus, spaceTool) {
+
+      // given
+      var spaceToolMoveSpy = spy(function(event) {
+
+        // then
+        expect(event.x).to.equal(100); // 97 snapped to 100
+      });
+
+      // when
+      spaceTool.activateMakeSpace(canvasEvent({ x: 0, y: 0 }));
+
+      // initialize context
+      dragging.move(canvasEvent({ x: 100, y: 0 }));
+
+      eventBus.on('spaceTool.move', spaceToolMoveSpy);
+
+      dragging.move(canvasEvent({ x: 97, y: 0 }));
+
+      // then
+      expect(spaceToolMoveSpy).to.have.been.called;
+    }));
+
+
+    it('vertical', inject(function(dragging, eventBus, spaceTool) {
+
+      // given
+      var spaceToolMoveSpy = spy(function(event) {
+
+        // then
+        expect(event.y).to.equal(100); // 103 snapped to 100
+      });
+
+      // when
+      spaceTool.activateMakeSpace(canvasEvent({ x: 0, y: 0 }));
+
+      // initialize context
+      dragging.move(canvasEvent({ x: 0, y: 100 }));
+
+      eventBus.on('spaceTool.move', spaceToolMoveSpy);
+
+      dragging.move(canvasEvent({ x: 0, y: 103 }));
+
+      // then
+      expect(spaceToolMoveSpy).to.have.been.called;
+    }));
+
+  });
 
 });

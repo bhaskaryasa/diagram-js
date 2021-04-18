@@ -120,7 +120,7 @@ describe('features/create - Create', function() {
     newElements.push(newShape3);
 
     newElements.push(elementFactory.createShape({
-      id: 'newShape3',
+      id: 'newShape4',
       parent: newShape2,
       x: 100,
       y: -25,
@@ -216,7 +216,7 @@ describe('features/create - Create', function() {
     ));
 
 
-    it('should append', inject(function(create, dragging, elementRegistry) {
+    it('should append and connect from source to new shape', inject(function(create, dragging, elementRegistry) {
 
       // given
       var rootGfx = elementRegistry.getGraphics('rootShape');
@@ -244,6 +244,40 @@ describe('features/create - Create', function() {
 
       expect(childShape.outgoing).to.have.length(1);
       expect(childShape.outgoing[0].target).to.equal(createdShape);
+    }));
+
+
+    it('should append and connect from new shape to source', inject(function(create, dragging, elementRegistry) {
+
+      // given
+      var rootGfx = elementRegistry.getGraphics('rootShape');
+
+      // when
+      create.start(canvasEvent({ x: 0, y: 0 }), newShape, {
+        source: childShape,
+        hints: {
+          connectionTarget: childShape
+        }
+      });
+
+      dragging.hover({ element: rootShape, gfx: rootGfx });
+
+      dragging.move(canvasEvent({ x: 500, y: 500 }));
+
+      dragging.end();
+
+      // then
+      var createdShape = elementRegistry.get('newShape');
+
+      expect(createdShape).to.exist;
+      expect(createdShape).to.equal(newShape);
+
+      expect(createdShape.parent).to.equal(rootShape);
+      expect(createdShape.outgoing).to.have.length(1);
+      expect(createdShape.outgoing[0].target).to.equal(childShape);
+
+      expect(childShape.incoming).to.have.length(1);
+      expect(childShape.incoming[0].source).to.equal(createdShape);
     }));
 
 
@@ -691,6 +725,35 @@ describe('features/create - Create', function() {
       expect(canExecute.canExecute).to.be.false;
       expect(canExecute.target).to.be.null;
     }));
+
+  });
+
+
+  describe('selection', function() {
+
+    it('should not select hidden after create', inject(
+      function(create, dragging, elementRegistry, selection) {
+
+        // given
+        newShape2.hidden = true;
+
+        var parentGfx = elementRegistry.getGraphics('parentShape');
+
+        // when
+        create.start(canvasEvent({ x: 0, y: 0 }), newElements);
+
+        dragging.hover({ element: parentShape, gfx: parentGfx });
+
+        dragging.move(canvasEvent(getMid(parentShape)));
+
+        dragging.end();
+
+        // then
+        var createdHiddenShape = elementRegistry.get(newShape2.id);
+
+        expect(selection.get()).not.to.contain(createdHiddenShape);
+      }
+    ));
 
   });
 

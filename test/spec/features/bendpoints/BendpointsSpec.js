@@ -128,6 +128,31 @@ describe('features/bendpoints', function() {
     }));
 
 
+    it('should NOT activate on AUXILIARY mouse button', inject(
+      function(dragging, eventBus, elementRegistry) {
+
+        // when
+        eventBus.fire('element.hover', {
+          element: connection,
+          gfx: elementRegistry.getGraphics(connection)
+        });
+        eventBus.fire('element.mousemove', {
+          element: connection,
+          originalEvent: canvasEvent({ x: 250, y: 250 })
+        });
+        eventBus.fire('element.mousedown', {
+          element: connection,
+          originalEvent: canvasEvent({ x: 250, y: 250 }, { button: 1 })
+        });
+
+        var draggingContext = dragging.context();
+
+        // then
+        expect(draggingContext).not.to.exist;
+      }
+    ));
+
+
     it('should activate bendpoint move on starting waypoint', inject(
       function(dragging, eventBus, elementRegistry) {
 
@@ -510,7 +535,7 @@ describe('features/bendpoints', function() {
 
         // then
         expect(newBounds).to.not.eql(oldBounds);
-        expect(newBounds.left).to.equal(525);
+        expect(newBounds.left).to.be.closeTo(525, 2);
       }
     ));
 
@@ -525,13 +550,17 @@ describe('features/bendpoints', function() {
 
         var bendpointContainer = domQuery('.djs-bendpoints', layer),
             draggerGfx = bendpoints.getSegmentDragger(1, bendpointContainer),
-            draggerVisual = getVisual(draggerGfx.childNodes[0]),
-            oldBounds = draggerVisual.getBoundingClientRect();
+            draggerVisual = getVisual(draggerGfx.childNodes[0]);
+
+        draggerVisual.style.display = 'block';
+
+        var oldBounds = draggerVisual.getBoundingClientRect();
 
         // when
         eventBus.fire('element.hover', {
           element: connection,
-          gfx: elementRegistry.getGraphics(connection)
+          gfx: elementRegistry.getGraphics(connection),
+          originalEvent: canvasEvent({ x: 450, y: 250 })
         });
         eventBus.fire('element.mousemove', {
           element: connection,
@@ -542,7 +571,7 @@ describe('features/bendpoints', function() {
 
         // then
         expect(newBounds).to.not.eql(oldBounds);
-        expect(newBounds.left).to.equal(453);
+        expect(newBounds.left).to.be.closeTo(453, 2);
       }
     ));
 

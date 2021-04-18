@@ -6,6 +6,106 @@ All notable changes to [diagram-js](https://github.com/bpmn-io/diagram-js) are d
 
 ___Note:__ Yet to be released changes appear here._
 
+## 7.2.3
+
+* `FIX`: correct intersections not being reported in some cases
+* `DEPS`: bump `path-intersection` dependency
+
+## 7.2.2
+
+* `FIX`: skip element alignment if less than two elements
+
+## 7.2.1
+
+* `FIX`: do not fail moving bendpoint over non diagram element
+
+## 7.2.0
+
+* `FEAT`: expose trigger in `commandStack.changed` event ([`9a41cbc9`](https://github.com/bpmn-io/diagram-js/commit/9a41cbc92e4e8d0484d0178f01f43b4477da2c19))
+* `FIX`: correct attach allowed stroke colors ([`f9ffb44b`](https://github.com/bpmn-io/diagram-js/commit/f9ffb44b6891d5081ae3c305461e6872a8b63c63))
+* `FIX`: correct drop fill colors ([`8a0ef203`](https://github.com/bpmn-io/diagram-js/commit/8a0ef203a4cf83054be3ace8eca6e1718160ac29))
+* `FIX`: allow recursive `EventBus#once` invocations ([`2e7c4178`](https://github.com/bpmn-io/diagram-js/commit/2e7c4178fca25f4f03d1de086a65fb49548feec2))
+
+## 7.1.0
+
+* `TEST`: simplify markup created by built-in test helpers
+
+## 7.0.0
+
+* `FEAT`: support soft breaks in labels ([`e3927166`](https://github.com/bpmn-io/diagram-js/commit/e3927166d0125674a9e7e937c5a4cbf68d69c21a))
+* `FEAT`: automatically activate tools with last mouse position when activated via keyboard or editor action ([#511](https://github.com/bpmn-io/diagram-js/pull/511))
+* `FEAT`: immediately activate handtool on `SPACE` down ([#511](https://github.com/bpmn-io/diagram-js/pull/511))
+* `FEAT`: allow components to react to auxiliary mouse events ([`1063f7c18`](https://github.com/bpmn-io/diagram-js/commit/1063f7c18474096d3d7c9e400ce82a1bf762a157))
+* `FEAT`: move canvas on auxiliary button mouse down ([`138161d6`](https://github.com/bpmn-io/diagram-js/commit/138161d6908edb578317d0d988accee20fca0187))
+* `CHORE`: make tool manager palette click detection fail-safe ([`5a1454e9`](https://github.com/bpmn-io/diagram-js/commit/5a1454e930484764122605b12268e5bafc1af675))
+
+### Breaking Changes
+
+* Auxiliary mouse button events will now be passed as `element.*` mouse events to components. You must filter your event listeners to prevent reactions to these events ([`1063f7c18`](https://github.com/bpmn-io/diagram-js/commit/1063f7c18474096d3d7c9e400ce82a1bf762a157)).
+
+## 6.8.2
+
+* `CHORE`: generalize hover fix ([#503](https://github.com/bpmn-io/diagram-js/pull/503))
+
+## 6.8.1
+
+* `FIX`: correct keyboard zoom in binding on international keyboard layouts ([#498](https://github.com/bpmn-io/diagram-js/pull/498))
+
+## 6.8.0
+
+* `FEAT`: support `Backspace` key for element removal
+* `FEAT`: support `SHIFT` click for adding elements to selection
+* `FEAT`: add `ElementRegistry#find` method
+
+## 6.7.1
+
+* `FIX`: touch handling for iOS devices ([#492](https://github.com/bpmn-io/diagram-js/pull/492))
+
+## 6.7.0
+
+* `FEAT`: align colors with Camunda Modeler ([#477](https://github.com/bpmn-io/diagram-js/pull/477))
+
+## 6.6.1
+
+* `FIX`: get connected distance based on weight in auto-place ([#464](https://github.com/bpmn-io/diagram-js/pull/464))
+
+## 6.6.0
+
+* `FEAT`: allow connecting with appended shape as source ([`d1b1fb8`](https://github.com/bpmn-io/diagram-js/commit/d1b1fb8056cc8914f90ba3c42b6b254830d0451c))
+* `FEAT`: add auto-place feature ([#443](https://github.com/bpmn-io/diagram-js/pull/443))
+* `FEAT`: allow to specify connection start and end for preview ([`7dfa896`](https://github.com/bpmn-io/diagram-js/pull/453/commits/7dfa896e73a0402aaf1129c2c3619f9ce285b250))
+* `FEAT`: accept hints for bendpoint move preview ([`e2c9409`](https://github.com/bpmn-io/diagram-js/pull/453/commits/e2c94096fc4b13f81857f96740b185eca5107ca0))
+* `FEAT`: accept layout hints on reconnect ([`2c30e10`](https://github.com/bpmn-io/diagram-js/pull/453/commits/2c30e1010691ae70e179b6d0e11f1a83e7a41a69))
+* `FEAT`: enable top-down modeling ([#453](https://github.com/bpmn-io/diagram-js/pull/453))
+* `FEAT`: use `keyCode` as fallback for keyboard key resolution ([#456](https://github.com/bpmn-io/diagram-js/pull/456), [#460](https://github.com/bpmn-io/diagram-js/pull/460))
+
+## 6.5.0
+
+* `FEAT`: on resize, keep attachments and connection docking intact if possible ([`e73bc8b`](e73bc8befdb05bd186b499d1e601b51f0f1c8963), [`ec80894`](ec80894dcaa55b12ca797006c70cca83544da06e))
+* `FIX`: correctly handle waypoints if space tool affects only one of connected shapes ([`393ac63`](393ac6305f8a34d5ab971fd0328af30e3a1ddefd))
+* `FIX`: select connect interaction target on connect ([#445](https://github.com/bpmn-io/diagram-js/issues/445))
+* `CHORE`: provide context when getting minimum dimensions for space-tool ([#444](https://github.com/bpmn-io/diagram-js/pull/444))
+* `CHORE`: bump dev dependencies ([`2eb50e5`](https://github.com/bpmn-io/diagram-js/commit/2eb50e5863e9fd3bec3f0cbed7861fb53845c289))
+
+## 6.4.1
+
+* `FIX`: do not interpret `0` as falsy value
+* `CHORE`: bump `min-dom` version
+
+## 6.4.0
+
+* `FEAT`: do not execute additional modeling behaviors when making space
+* `FIX`: copy `hidden` and `collapsed` properties ([#441](https://github.com/bpmn-io/diagram-js/pull/441))
+* `FIX`: do not select hidden elements after create
+* `FIX`: do not add preview for hidden elements
+* `CHORE`: rewrite space tool
+
+## 6.3.0
+
+* `FEAT`: improve connection cropping
+* `FEAT`: update incoming and outgoing connections on replace ([`ba5a5fb0`](https://github.com/bpmn-io/diagram-js/commit/ba5a5fb021a775147bcb1e02c93e105fe3cd47ce))
+* `FIX`: prevent double layout on replace ([`c0db3b4da`](https://github.com/bpmn-io/diagram-js/commit/c0db3b4da89a08198225cfdd1d332fd487b1ac14))
+
 ## 6.2.2
 
 * `FIX`: show line during make space again

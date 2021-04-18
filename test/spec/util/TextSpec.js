@@ -10,35 +10,6 @@ import {
 } from 'tiny-svg';
 
 
-function toFitBBox(actual, expected) {
-
-  var actualBBox = actual.getBBox ? actual.getBBox() : actual;
-
-  var pass = actualBBox.width <= expected.width &&
-             (expected.height ? actualBBox.height <= expected.height : true);
-
-
-  if (actualBBox.x) {
-    pass = actualBBox.x >= expected.x &&
-           actualBBox.y >= expected.y &&
-           actualBBox.x + actualBBox.width <= expected.x + expected.width &&
-           (expected.height ? actualBBox.y + actualBBox.height <= expected.y + expected.height : true);
-  }
-
-  if (!pass) {
-    var bbox = pick(actualBBox, ['x', 'y', 'width', 'height']);
-
-    var message =
-      'Expected Element#' + actual.id + ' with bbox ' +
-       JSON.stringify(bbox) + ' to fit ' +
-       JSON.stringify(expected);
-
-    console.error(message);
-  }
-
-  return !!pass;
-}
-
 import TextUtil from 'lib/util/Text';
 
 import TestContainer from 'mocha-test-container-support';
@@ -79,6 +50,40 @@ describe('util - Text', function() {
     svgAppend(svg, container);
   });
 
+  function toFitBBox(actual, expected) {
+
+    var parent = actual.parentNode;
+
+    if (parent) {
+      drawRect(expected, { strokeWidth: '1px', stroke: 'orange' });
+    }
+
+    var actualBBox = actual.getBBox ? actual.getBBox() : actual;
+
+    var pass = actualBBox.width <= expected.width &&
+               (expected.height ? actualBBox.height <= expected.height : true);
+
+    if (actualBBox.x) {
+      pass = actualBBox.x >= expected.x &&
+             actualBBox.y >= expected.y &&
+             actualBBox.x + actualBBox.width <= expected.x + expected.width &&
+             (expected.height ? actualBBox.y + actualBBox.height <= expected.y + expected.height : true);
+    }
+
+    if (!pass) {
+      var bbox = pick(actualBBox, ['x', 'y', 'width', 'height']);
+
+      var message =
+        'Expected Element#' + actual.id + ' with bbox ' +
+         JSON.stringify(bbox) + ' to fit ' +
+         JSON.stringify(expected);
+
+      console.error(message);
+    }
+
+    return !!pass;
+  }
+
   function drawRect(bounds, style) {
 
     var x = bounds.x || 0,
@@ -114,16 +119,22 @@ describe('util - Text', function() {
     var element = textAndBoundingBox.element,
         dimensions = textAndBoundingBox.dimensions;
 
-    drawRect(dimensions, { strokeWidth: '1px', stroke: 'fuchsia' });
-
     svgAppend(container, element);
+
+    var bbox = element.getBBox();
+
+    drawRect({
+      x: bbox.x,
+      y: bbox.y,
+      width: dimensions.width,
+      height: dimensions.height
+    }, { strokeWidth: '1px', stroke: 'fuchsia' });
 
     return element;
   }
 
 
   describe('#createText', function() {
-
 
     it('should create simple label', function() {
 
@@ -252,6 +263,101 @@ describe('util - Text', function() {
 
         expect(text).to.exist;
         expect(toFitBBox(text, { x: 0, y: -40, width: 100, height: 190 })).to.be.true;
+      });
+
+
+      it('preformated / soft breaks', function() {
+
+        // given
+        // string contains invisible "soft break characters" => |
+        // Fight Hippopoto­|monstro­|sesquippe­|daliophobia
+        var label = 'Fight Hippopoto­monstro­sesquippe­daliophobia';
+
+        // when
+        var text = createText(container, label, {
+          box: { width: 100, height: 100 },
+          align: 'center-middle',
+          padding: 5
+        });
+
+        expect(text).to.exist;
+        expect(toFitBBox(text, { x: 0, y: 0, width: 100, height: 100 })).to.be.true;
+      });
+
+
+      it('preformated / soft breaks / forced breaks', function() {
+
+        // given
+        // string contains invisible "soft break characters" => |
+        // Hippopoto­|monstro­\n\nsesquippe­|daliophobia
+        var label = 'Hippopoto­monstro\n\nsesquippe­daliophobia';
+
+        // when
+        var text = createText(container, label, {
+          box: { width: 100, height: 100 },
+          align: 'center-middle',
+          padding: 5
+        });
+
+        expect(text).to.exist;
+        expect(toFitBBox(text, { x: 0, y: 0, width: 100, height: 100 })).to.be.true;
+      });
+
+
+      it('preformated / soft breaks / no break', function() {
+
+        // given
+        // string contains invisible "soft break characters" => |
+        // Fight A|B|C
+        var label = 'Fight A­B­C';
+
+        // when
+        var text = createText(container, label, {
+          box: { width: 100, height: 100 },
+          align: 'center-middle',
+          padding: 5
+        });
+
+        expect(text).to.exist;
+        expect(toFitBBox(text, { x: 0, y: 35, width: 100, height: 30 })).to.be.true;
+      });
+
+
+      it('preformated / soft breaks / CR_LF', function() {
+
+        // given
+        // string contains invisible "soft break characters" => |
+        // Fight Hippopoto­|monstro­|\r\nsesquippe­|daliophobia
+        var label = 'Fight Hippopoto­monstro­\r\nsesquippe­daliophobia';
+
+        // when
+        var text = createText(container, label, {
+          box: { width: 100, height: 100 },
+          align: 'center-middle',
+          padding: 5
+        });
+
+        expect(text).to.exist;
+        expect(toFitBBox(text, { x: 0, y: 0, width: 100, height: 100 })).to.be.true;
+      });
+
+
+      it('preformated / soft breaks / some breaks', function() {
+
+        // given
+        // string contains invisible "soft break characters" => |
+        // Fight A|B|C|D|E|F|G|H|I|J|K
+        var label = 'Fight A­B­C­D­E­FG­H­I­J­K';
+
+        // when
+        var text = createText(container, label, {
+          box: { width: 100, height: 100 },
+          align: 'center-middle',
+          padding: 5
+        });
+
+        expect(text).to.exist;
+        expect(toFitBBox(text, { x: 0, y: 25, width: 100, height: 50 })).to.be.true;
       });
 
 

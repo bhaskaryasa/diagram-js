@@ -1,11 +1,16 @@
 import {
   bootstrapDiagram,
+  getDiagramJS,
   inject
 } from 'test/TestHelper';
 
 import {
   createCanvasEvent as canvasEvent
 } from '../../../util/MockEvents';
+
+import {
+  assign
+} from 'min-dash';
 
 import modelingModule from 'lib/features/modeling';
 import lassoToolModule from 'lib/features/lasso-tool';
@@ -15,7 +20,13 @@ import draggingModule from 'lib/features/dragging';
 describe('features/lasso-tool', function() {
 
 
-  beforeEach(bootstrapDiagram({ modules: [ modelingModule, lassoToolModule, draggingModule ] }));
+  beforeEach(bootstrapDiagram({
+    modules: [
+      modelingModule,
+      lassoToolModule,
+      draggingModule
+    ]
+  }));
 
 
   var rootShape, childShape, childShape2, childShape3, childShape4;
@@ -56,6 +67,26 @@ describe('features/lasso-tool', function() {
 
     canvas.addShape(childShape4, rootShape);
   }));
+
+
+  describe('#toggle', function() {
+
+    it('should activate and deactivate', inject(function(lassoTool) {
+
+      // given
+      lassoTool.toggle();
+
+      // assume
+      expect(lassoTool.isActive()).to.be.true;
+
+      // when
+      lassoTool.toggle();
+
+      // then
+      expect(lassoTool.isActive()).not.to.be.ok;
+    }));
+
+  });
 
 
   describe('#select', function() {
@@ -116,4 +147,42 @@ describe('features/lasso-tool', function() {
 
   });
 
+
+  describe('activate on mouse', function() {
+
+    it('should start on PRIMARY mousedown', inject(function(lassoTool, eventBus) {
+
+      // when
+      eventBus.fire(mouseDownEvent(rootShape, { shiftKey: true }));
+
+      // then
+      expect(lassoTool.isActive()).to.be.true;
+    }));
+
+
+    it('should NOT start on AUXILIARY mousedown', inject(function(lassoTool, eventBus) {
+
+      // when
+      eventBus.fire(mouseDownEvent(rootShape, { button: 1, shiftKey: true }));
+
+      // then
+      expect(lassoTool.isActive()).not.to.be.ok;
+    }));
+
+  });
+
 });
+
+
+// helpers ////////////////
+
+function mouseDownEvent(element, data) {
+
+  return getDiagramJS().invoke(function(eventBus) {
+    return eventBus.createEvent({
+      type: 'element.mousedown',
+      element: element,
+      originalEvent: assign({ button: 0 }, data || {})
+    });
+  });
+}
